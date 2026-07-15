@@ -1,7 +1,7 @@
 name: Cancel runs on PR close
+# DISABLED: automatic triggers removed; manual run only.
 on:
-  pull_request:
-    types: [closed]
+  workflow_dispatch:
 
 permissions:
   actions: write

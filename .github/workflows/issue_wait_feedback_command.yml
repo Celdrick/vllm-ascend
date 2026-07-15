@@ -1,8 +1,8 @@
 name: Handle /wait-feedback Command
 
+# DISABLED: automatic triggers removed; manual run only.
 on:
-  repository_dispatch:
-    types: [wait-feedback-command]
+  workflow_dispatch:
 
 permissions:
   issues: write

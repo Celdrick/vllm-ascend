@@ -17,9 +17,8 @@
 
 name: Schedule Test Coverage
 
+# DISABLED: automatic triggers removed; manual run only.
 on:
-  schedule:
-    - cron: "0 18 * * *"
   workflow_dispatch:
     inputs:
       vllm_ascend_ref:

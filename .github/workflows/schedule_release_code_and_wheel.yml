@@ -17,13 +17,8 @@
 
 name: Release Code and Wheel
 
+# DISABLED: automatic triggers removed; manual run only.
 on:
-  schedule:
-    # UTC+8: 10am, 16pm
-    - cron: '0 2,8 * * *'
-  push:
-    tags:
-      - 'v*'
   workflow_dispatch:
     inputs:
       tag:

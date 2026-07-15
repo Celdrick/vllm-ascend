@@ -17,8 +17,9 @@
 
 name: PR Create
 
+# DISABLED: automatic triggers removed; manual run only.
 on:
-  pull_request_target:
+  workflow_dispatch:
 
 permissions:
   pull-requests: write

@@ -1,8 +1,7 @@
 name: Merge Conflict Labeler
+# DISABLED: automatic triggers removed; manual run only.
 on:
-  push:
-  pull_request_target:
-    types: [synchronize]
+  workflow_dispatch:
 
 jobs:
   main:

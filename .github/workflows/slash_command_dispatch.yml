@@ -1,4 +1,4 @@
-﻿﻿#
+﻿#
 # Copyright (c) 2025 Huawei Technologies Co., Ltd. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,9 +17,9 @@
 
 name: Slash Command Dispatch
 
+# DISABLED: automatic triggers removed; manual run only.
 on:
-  issue_comment:
-    types: [created]
+  workflow_dispatch:
 
 jobs:
   slashCommandDispatch:

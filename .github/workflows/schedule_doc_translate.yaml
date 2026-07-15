@@ -17,9 +17,8 @@
 
 name: Auto Doc Translate
 
+# DISABLED: automatic triggers removed; manual run only.
 on:
-  schedule:
-    - cron: '0 0 */3 * *'
   workflow_dispatch:
     inputs:
       target_branch:

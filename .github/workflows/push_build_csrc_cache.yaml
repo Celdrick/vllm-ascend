@@ -18,16 +18,8 @@
 # 3 chip_type variants (a2 / a3 / 310p) — all ARM64 + Ubuntu.
 # Only ARM64 is needed since NPU test runners are all linux-aarch64-*.
 name: 'Cache csrc Build Artifacts'
+# DISABLED: automatic triggers removed; manual run only.
 on:
-  push:
-    branches: [ "main" ]
-    paths:
-      - 'csrc/**'
-      - 'setup.py'
-      - 'CMakeLists.txt'
-      - 'cmake/**'
-      - .github/workflows/push_build_csrc_cache.yaml
-      - 'pyproject.toml'
   workflow_dispatch:
 
 defaults:

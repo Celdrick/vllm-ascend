@@ -16,9 +16,8 @@
 
 name: Main2Main
 
+# DISABLED: automatic triggers removed; manual run only.
 on:
-  schedule:
-    - cron: '0 14 * * *'
   workflow_dispatch:
     inputs:
       target_commit:

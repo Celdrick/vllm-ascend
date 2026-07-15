@@ -11,15 +11,8 @@
 #   - is for final release image
 #   - Publish when tag with v* (pep440 version)  ===>  vllm-ascend:v1.2.3 / vllm-ascend:v1.2.3rc1
 name: Image Build and Push
+# DISABLED: automatic triggers removed; manual run only.
 on:
-  push:
-    tags:
-      - 'v*'
-  pull_request: 
-    branches:
-      - 'main'
-      - 'releases/*'
-    types: [ labeled ]
   workflow_dispatch:
     inputs:
       tag:

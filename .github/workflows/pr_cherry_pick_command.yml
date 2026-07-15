@@ -17,9 +17,9 @@
 
 name: Handle /cherry-pick Command
 
+# DISABLED: automatic triggers removed; manual run only.
 on:
-  repository_dispatch:
-    types: [cherry-pick-command]
+  workflow_dispatch:
 
 defaults:
   run:

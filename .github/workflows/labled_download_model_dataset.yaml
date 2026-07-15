@@ -1,11 +1,8 @@
 name: 'model downloader'
 
+# DISABLED: automatic triggers removed; manual run only.
 on:
-  pull_request:
-    paths:
-      - '.github/workflows/misc/model_dataset_list.json'
-      - '.github/workflows/labled_download_model.yaml'
-    types: [labeled, synchronize]
+  workflow_dispatch:
 
 defaults:
   run:

@@ -20,10 +20,8 @@
 # We will limit the concurrency of jobs on A3 to avoid the risk of insufficient resources
 name: Weekly-A3
 
+# DISABLED: automatic triggers removed; manual run only.
 on:
-  schedule:
-      # Run test at 10:00 Beijing time (UTC+8) every Sunday
-      - cron: "0 2 * * 0"
   workflow_dispatch:
     inputs:
       vllm_ascend_branch:

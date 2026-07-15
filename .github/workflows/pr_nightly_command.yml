@@ -17,9 +17,9 @@
 
 name: Handle /nightly Command
 
+# DISABLED: automatic triggers removed; manual run only.
 on:
-  repository_dispatch:
-    types: [nightly-command, weekly-command]
+  workflow_dispatch:
 
 defaults:
   run:

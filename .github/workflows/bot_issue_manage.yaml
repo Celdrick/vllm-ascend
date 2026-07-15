@@ -1,7 +1,7 @@
 name: "Issue Create/Update Labeler"
+# DISABLED: automatic triggers removed; manual run only.
 on:
-  issues:
-    types: [opened, edited]
+  workflow_dispatch:
 
 permissions:
   issues: write
