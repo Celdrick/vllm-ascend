@@ -34,19 +34,23 @@ on:
         type: string
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: build-wheel-a2-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  build_and_publish_wheel:
-    name: build and publish wheel (A2)
+  build_wheel:
+    name: build wheel (A2)
     if: >-
       github.event_name != 'workflow_run' ||
       github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-24.04-arm
+    outputs:
+      release_tag: ${{ steps.meta.outputs.release_tag }}
+      release_name: ${{ steps.meta.outputs.release_name }}
+      commit_sha: ${{ steps.meta.outputs.commit_sha }}
     steps:
       - name: Checkout vllm-ascend
         uses: actions/checkout@v7
@@ -56,6 +60,16 @@ jobs:
             ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha
             || github.event_name == 'workflow_dispatch' && github.event.inputs.ref
             || 'main' }}
+
+      - name: Prepare release metadata
+        id: meta
+        run: |
+          COMMIT_SHA="$(git rev-parse HEAD)"
+          SHORT_SHA="$(git rev-parse --short HEAD)"
+          BUILD_DATE="$(date -u +%Y%m%d)"
+          echo "commit_sha=${COMMIT_SHA}" >> "$GITHUB_OUTPUT"
+          echo "release_tag=wheel-a2-${BUILD_DATE}-${SHORT_SHA}-${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+          echo "release_name=vllm-ascend A2 wheel (ARM, py3.12) ${BUILD_DATE}" >> "$GITHUB_OUTPUT"
 
       - name: Free up disk space
         uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be # v1.3.1
@@ -114,67 +128,32 @@ jobs:
           name: vllm-ascend-a2-arm-py3.12-wheel
           path: dist/
 
-      - name: Publish wheels to PyPI
-        run: |
-          python3 -m pip install twine
-          python3 -m twine upload --verbose dist/*.whl -u __token__ -p ${{ secrets.PYPI_TOKEN }}
-
-  generate_and_upload_variant_index:
-    name: generate and upload variant index
-    needs: [build_and_publish_wheel]
+  publish_github_release:
+    name: publish GitHub release
+    needs: [build_wheel]
     runs-on: ubuntu-24.04
     steps:
-      - name: Download all variant wheels
+      - name: Download wheel artifacts
         uses: actions/download-artifact@v8
         with:
-          pattern: '*-wheel'
-          path: all-wheels/
-          merge-multiple: true
+          name: vllm-ascend-a2-arm-py3.12-wheel
+          path: dist/
 
-      - name: Collect variant wheels
-        run: |
-          mkdir -p combined-variants
-          find all-wheels/ -path '*/variants/*.whl' -exec cp {} combined-variants/ \;
-          echo "Combined variant wheels:"
-          ls combined-variants/
-
-      - name: Set up Python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
-        with:
-          python-version: "3.12"
-
-      - name: Generate combined variant index
+      - name: Generate variant index
         run: |
           pip install git+https://github.com/wheelnext/variantlib.git --quiet
-          variantlib generate-index-json -d combined-variants/
-          echo "Generated index files:"
-          ls combined-variants/
+          variantlib generate-index-json -d dist/variants/
+          ls dist/variants/
 
-      - name: Upload wheels and variant index to OBS
-        env:
-          OBS_ACCESS_KEY: ${{ secrets.OBS_ACCESS_KEY_ID }}
-          OBS_SECRET_KEY: ${{ secrets.OBS_SECRET_ACCESS_KEY }}
-        run: |
-          pip install esdk-obs-python --quiet
-          python3 - <<'EOF'
-          import glob
-          import os
-
-          from obs import ObsClient
-
-          OBS_BUCKET = 'ascend-artifcat-packages'
-          OBS_PATH = 'pypi/packages/ascend/repos/pypi/variant/vllm-ascend'
-          client = ObsClient(
-              access_key_id=os.environ['OBS_ACCESS_KEY'],
-              secret_access_key=os.environ['OBS_SECRET_KEY'],
-              server='https://obs.cn-north-4.myhuaweicloud.com'
-          )
-          files = glob.glob('combined-variants/*.whl') + glob.glob('combined-variants/*.json')
-          for file in files:
-              filename = os.path.basename(file)
-              resp = client.putFile(OBS_BUCKET, f'{OBS_PATH}/{filename}', file)
-              if resp.status < 300:
-                  print(f'Uploaded: {filename}')
-              else:
-                  raise Exception(f'Failed to upload {filename}: {resp.errorMessage}')
-          EOF
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.build_wheel.outputs.release_tag }}
+          name: ${{ needs.build_wheel.outputs.release_name }}
+          target_commitish: ${{ needs.build_wheel.outputs.commit_sha }}
+          prerelease: true
+          generate_release_notes: true
+          files: |
+            dist/*.whl
+            dist/variants/*.whl
+            dist/variants/*.json
