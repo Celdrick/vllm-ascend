@@ -67,14 +67,38 @@ jobs:
             exit 0
           fi
 
-          git merge --no-edit "upstream/${UPSTREAM_BRANCH}"
-
-          # Keep fork CI config: do not sync upstream workflow changes.
-          git checkout "${BEFORE_SHA}" -- .github/workflows/
-          if ! git diff --cached --quiet; then
-            git commit -m "Keep fork workflow files during upstream sync"
+          # Merge without committing first so the pushed commit never touches
+          # .github/workflows/ (GITHUB_TOKEN cannot push workflow file changes).
+          if ! git merge --no-commit --no-ff "upstream/${UPSTREAM_BRANCH}"; then
+            git checkout HEAD -- .github/workflows/ 2>/dev/null || git checkout --ours .github/workflows/
+            git add .github/workflows/
+            REMAINING_CONFLICTS="$(git diff --name-only --diff-filter=U | grep -v '^\.github/workflows/' || true)"
+            if [ -n "${REMAINING_CONFLICTS}" ]; then
+              echo "::error::Merge conflicts outside .github/workflows/:"
+              echo "${REMAINING_CONFLICTS}"
+              git merge --abort
+              exit 1
+            fi
           fi
 
+          git checkout HEAD -- .github/workflows/
+          git add .github/workflows/
+
+          if git diff --cached --quiet && git diff --quiet; then
+            git merge --abort 2>/dev/null || true
+            echo "No net changes after keeping fork workflows"
+            exit 0
+          fi
+
+          if git diff --cached --quiet "${BEFORE_SHA}" -- .github/workflows/; then
+            echo "Workflow tree matches fork before sync"
+          else
+            echo "::error::Workflow tree would change; aborting push"
+            git merge --abort 2>/dev/null || true
+            exit 1
+          fi
+
+          git commit -m "Merge upstream/${UPSTREAM_BRANCH} (keep fork workflows)"
           git push "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" main
 
           echo "Synced ${BEFORE_SHA} -> ${UPSTREAM_SHA} (workflows unchanged)"
