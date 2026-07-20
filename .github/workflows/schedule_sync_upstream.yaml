@@ -67,11 +67,19 @@ jobs:
             exit 0
           fi
 
+          # Snapshot fork workflows before merge; restored verbatim after merge.
+          git archive "${BEFORE_SHA}" -o /tmp/fork-workflows.tar .github/workflows
+
+          restore_fork_workflows() {
+            rm -rf .github/workflows
+            tar -xf /tmp/fork-workflows.tar
+            git add -A .github/workflows/
+          }
+
           # Merge without committing first so the pushed commit never touches
           # .github/workflows/ (GITHUB_TOKEN cannot push workflow file changes).
           if ! git merge --no-commit --no-ff "upstream/${UPSTREAM_BRANCH}"; then
-            git checkout HEAD -- .github/workflows/ 2>/dev/null || git checkout --ours .github/workflows/
-            git add .github/workflows/
+            restore_fork_workflows
             REMAINING_CONFLICTS="$(git diff --name-only --diff-filter=U | grep -v '^\.github/workflows/' || true)"
             if [ -n "${REMAINING_CONFLICTS}" ]; then
               echo "::error::Merge conflicts outside .github/workflows/:"
@@ -79,10 +87,9 @@ jobs:
               git merge --abort
               exit 1
             fi
+          else
+            restore_fork_workflows
           fi
-
-          git checkout HEAD -- .github/workflows/
-          git add .github/workflows/
 
           if git diff --cached --quiet && git diff --quiet; then
             git merge --abort 2>/dev/null || true
@@ -90,10 +97,17 @@ jobs:
             exit 0
           fi
 
-          if git diff --cached --quiet "${BEFORE_SHA}" -- .github/workflows/; then
-            echo "Workflow tree matches fork before sync"
-          else
-            echo "::error::Workflow tree would change; aborting push"
+          if git diff --cached "${BEFORE_SHA}" -- .github/workflows/ | grep -q .; then
+            echo "::error::Workflow tree still differs from fork after restore:"
+            git diff --cached "${BEFORE_SHA}" -- .github/workflows/ || true
+            git merge --abort 2>/dev/null || true
+            exit 1
+          fi
+          echo "Workflow tree matches fork before sync"
+
+          if git diff --name-only --diff-filter=U | grep -q .; then
+            echo "::error::Unresolved merge conflicts remain:"
+            git diff --name-only --diff-filter=U
             git merge --abort 2>/dev/null || true
             exit 1
           fi
