@@ -39,26 +39,15 @@ jobs:
     name: Sync from upstream main
     runs-on: ubuntu-latest
     steps:
-      - name: Require PAT with workflows scope
-        env:
-          PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
-        run: |
-          if [ -z "${PAT_TOKEN}" ]; then
-            echo "::error::PAT_TOKEN secret is required to push workflow file changes from upstream."
-            echo "Create a classic PAT with repo + workflow scopes and add it as PAT_TOKEN."
-            exit 1
-          fi
-
       - name: Checkout fork main
         uses: actions/checkout@v7
         with:
           ref: main
           fetch-depth: 0
-          token: ${{ secrets.PAT_TOKEN }}
 
       - name: Merge upstream main
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
           GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
           set -euo pipefail
@@ -79,6 +68,13 @@ jobs:
           fi
 
           git merge --no-edit "upstream/${UPSTREAM_BRANCH}"
+
+          # Keep fork CI config: do not sync upstream workflow changes.
+          git checkout "${BEFORE_SHA}" -- .github/workflows/
+          if ! git diff --cached --quiet; then
+            git commit -m "Keep fork workflow files during upstream sync"
+          fi
+
           git push "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" main
 
-          echo "Synced ${BEFORE_SHA} -> ${UPSTREAM_SHA}"
+          echo "Synced ${BEFORE_SHA} -> ${UPSTREAM_SHA} (workflows unchanged)"
