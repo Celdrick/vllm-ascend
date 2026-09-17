@@ -18,17 +18,18 @@ Please refer to the [Feature Guide](../../user_guide/feature_guide/index.md) for
 
 ### 3.1 Model Weight
 
-**Qwen3.5-27B**
-
-- `Qwen3.5-27B` (BF16 version): requires 1 Atlas 800 A3 (64GB × 16) node or 1 Atlas 800 A2 (64GB × 8) node or Atlas 300I DUO. [Download model weight](https://www.modelscope.cn/models/Qwen/Qwen3.5-27B)
-- `Qwen3.5-27B-w8a8` (Quantized version): requires 1 Atlas 800 A3 (64GB × 16) node or 1 Atlas 800 A2 (64GB × 8) node or Atlas 300I DUO. [Download model weight](https://www.modelscope.cn/models/Eco-Tech/Qwen3.5-27B-w8a8-mtp)
-
-- `Qwen3.6-27B` (BF16 version): requires 1 Ascend 950DT(96GB × 8) node or 1 Atlas 800 A3 (64GB × 16) node or 1 Atlas 800 A2 (64GB × 8) node or Atlas 300I DUO. [Download model weight](https://www.modelscope.cn/models/Qwen/Qwen3.6-27B)
-- `Qwen3.6-27B-w8a8` (Quantized version): requires 1 Atlas 800 A3 (64GB × 16) node or 1 Atlas 800 A2 (64GB × 8) node. [Download model weight](https://www.modelscope.cn/models/Eco-Tech/Qwen3.6-27B-w8a8)
-- `Qwen3.6-27B-w8a8-mxfp8` (Quantized version): requires 1 Ascend950DT series (96GB × 8) node. [Download model weight](https://www.modelscope.cn/models/Eco-Tech/Qwen3.6-27B-w8a8-mxfp8)
- `Qwen3.6-27B-w8a8-310p`(Quantized version): requires 1 Atlas 300I DUO. [Download model weight](https://modelscope.cn/models/Eco-Tech/Qwen3.6-27B-W8A8-310P)
+|  Weight Version | Hardware Requirements | Download Links |
+|-----------------|-----------------------|----------------|
+| `Qwen3.5-27B` (BF16 version) | 1 Atlas 800 A3 (64GB × 16) node or 1 Atlas 800 A2 (64GB × 8) node or Atlas 300I DUO | [ModelScope](https://www.modelscope.cn/models/Qwen/Qwen3.5-27B) \| [Hugging Face](https://huggingface.co/Qwen/Qwen3.5-27B) |
+| `Qwen3.5-27B-w8a8` (Quantized version) | 1 Atlas 800 A3 (64GB × 16) node or 1 Atlas 800 A2 (64GB × 8) node or Atlas 300I DUO | [ModelScope](https://www.modelscope.cn/models/Eco-Tech/Qwen3.5-27B-w8a8-mtp) |
+| `Qwen3.6-27B` (BF16 version) | 1 Ascend 950DT(96GB × 8) node or 1 Atlas 800 A3 (64GB × 16) node or 1 Atlas 800 A2 (64GB × 8) node or Atlas 300I DUO | [ModelScope](https://www.modelscope.cn/models/Qwen/Qwen3.6-27B) \| [Hugging Face](https://huggingface.co/Qwen/Qwen3.6-27B) |
+| `Qwen3.6-27B-w8a8` (Quantized version) | 1 Atlas 800 A3 (64GB × 16) node or 1 Atlas 800 A2 (64GB × 8) node | [ModelScope](https://www.modelscope.cn/models/Eco-Tech/Qwen3.6-27B-w8a8) |
+| `Qwen3.6-27B-w8a8-mxfp8` (Quantized version) | 1 Ascend950DT series (96GB × 8) node | [ModelScope](https://www.modelscope.cn/models/Eco-Tech/Qwen3.6-27B-w8a8-mxfp8) |
+| `Qwen3.6-27B-w8a8-310p`(Quantized version) | 1 Atlas 300I DUO | [ModelScope](https://modelscope.cn/models/Eco-Tech/Qwen3.6-27B-W8A8-310P) |
 
 It is recommended to download the model weight to the shared directory of multiple nodes, such as `/root/.cache/`.
+
+>**Path description**: Download the model weights to a directory of your choice and record it. Ensure the model path in the subsequent deployment command matches this directory.
 
 ### 3.2 Verify Multi-node Communication
 
@@ -138,7 +139,7 @@ It is **recommended to use the latest release candidate (rc) version or the late
         -v /usr/local/Ascend/driver/version.info:/usr/local/Ascend/driver/version.info \
         -v /etc/ascend_install.info:/etc/ascend_install.info \
         -v /root/.cache:/root/.cache \
-        -p 8080:8080 \
+        -p 8000:8000 \
         -it $IMAGE bash
     ```
 
@@ -240,6 +241,7 @@ Both `Qwen3.5-27B` and `Qwen3.6-27B` share the same MTP head design, so the `qwe
         # Size of the shared buffer (in MB) used by HCCL for NPU-to-NPU collective communication
 
         # Model weight path; can be a ModelScope model id (e.g., Eco-Tech/Qwen3.5-27B-w8a8-mtp) or a local directory path
+        # Ensure the model path matches the directory recorded during download
 
         vllm serve $MODEL_PATH \
             --host 0.0.0.0 \
@@ -275,6 +277,7 @@ Both `Qwen3.5-27B` and `Qwen3.6-27B` share the same MTP head design, so the `qwe
         # Size of the shared buffer (in MB) used by HCCL for NPU-to-NPU collective communication
 
         # Model weight path; can be a ModelScope model id (e.g., Eco-Tech/Qwen3.6-27B-w8a8) or a local directory path
+        # Ensure the model path matches the directory recorded during download
 
         vllm serve $MODEL_PATH \
             --host 0.0.0.0 \
@@ -327,10 +330,11 @@ Both `Qwen3.5-27B` and `Qwen3.6-27B` share the same MTP head design, so the `qwe
         export VLLM_USE_MODELSCOPE=True
 
         # Model weight path; can be a ModelScope model id (e.g., Eco-Tech/Qwen3.5-27B-w8a8-mtp) or a local directory path
+        # Ensure the model path matches the directory recorded during download
 
         vllm serve $MODEL_PATH \
             --host 127.0.0.1 \
-            --port 8080 \
+            --port 8000 \
             --tensor-parallel-size 4 \
             --served-model-name qwen3.5 \
             --max-num-seqs 128 \
@@ -355,10 +359,11 @@ Both `Qwen3.5-27B` and `Qwen3.6-27B` share the same MTP head design, so the `qwe
         export VLLM_USE_MODELSCOPE=True
 
         # Model weight path; can be a ModelScope model id (e.g., Eco-Tech/Qwen3.6-27B-w8a8) or a local directory path
+        # Ensure the model path matches the directory recorded during download
 
         vllm serve $MODEL_PATH \
             --host 127.0.0.1 \
-            --port 8080 \
+            --port 8000 \
             --tensor-parallel-size 4 \
             --served-model-name qwen3.6 \
             --max-num-seqs 128 \
@@ -405,6 +410,7 @@ Both `Qwen3.5-27B` and `Qwen3.6-27B` share the same MTP head design, so the `qwe
         # Size of the shared buffer (in MB) used by HCCL for NPU-to-NPU collective communication
 
         # Model weight path; can be a ModelScope model id (e.g., Eco-Tech/Qwen3.6-27B-w8a8-mxfp8) or a local directory path
+        # Ensure the model path matches the directory recorded during download
 
         vllm serve $MODEL_PATH \
             --host 0.0.0.0 \
@@ -521,7 +527,7 @@ To run the vllm-ascend Prefill-Decode Disaggregation service, you need to:
     # export LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libjemalloc.so.2:$LD_PRELOAD
 
 
-
+    # Ensure the model path matches the directory recorded during download
     vllm serve Eco-Tech/Qwen3.5-27B-w8a8-mtp \
       --host 0.0.0.0 \
       --port $2 \
@@ -581,7 +587,7 @@ To run the vllm-ascend Prefill-Decode Disaggregation service, you need to:
     # export LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libjemalloc.so.2:$LD_PRELOAD
 
 
-
+    # Ensure the model path matches the directory recorded during download
     vllm serve Eco-Tech/Qwen3.5-27B-w8a8-mtp \
       --host 0.0.0.0 \
       --port $2 \
@@ -642,7 +648,7 @@ To run the vllm-ascend Prefill-Decode Disaggregation service, you need to:
 
     ```shell
     python load_balance_proxy_server_example.py \
-      --port 1999 \
+      --port 8000 \
       --host 192.xx.xx.1 \
       --prefiller-hosts \
         192.xx.xx.1 \
@@ -673,7 +679,7 @@ Deployment Verification:
 After the PD separation service is fully started, send a request through the proxy port on the prefill master node to verify that Prefill and Decode nodes are working correctly together:
 
 ```bash
-curl http://<proxy_node0_ip>:1999/v1/chat/completions \
+curl http://<proxy_node0_ip>:8000/v1/chat/completions \
     -H "Content-Type: application/json" \
     -d '{
         "model": "qwen3.5",
@@ -757,7 +763,7 @@ Expected Result: The service returns HTTP 200 OK. The JSON response contains the
 
 Here are two accuracy evaluation methods.
 
-### Using AISBench
+### 7.1 Using AISBench
 
 1. Refer to [Using AISBench](../../developer_guide/evaluation/using_ais_bench.md) for details.
 
@@ -804,7 +810,7 @@ models = [
 |----- | ----- | ----- | ----- | -----|
 | gsm8k | - | accuracy | gen | 96.74 |
 
-### Using Language Model Evaluation Harness
+### 7.2 Using Language Model Evaluation Harness
 
 Using the `gsm8k` dataset as an example test dataset, run the accuracy evaluation for `Qwen3.5-27B-w8a8` in online mode.
 
@@ -834,11 +840,11 @@ lm_eval \
 
 ## 8 Performance Evaluation
 
-### Using AISBench
+### 8.1 Using AISBench
 
 Refer to [Using AISBench for performance evaluation](../../developer_guide/evaluation/using_ais_bench.md#execute-performance-evaluation) for details.
 
-### Using vLLM Benchmark
+### 8.2 Using vLLM Benchmark
 
 Run performance evaluation of `Qwen3.5-27B-w8a8` or `Qwen3.6-27B-w8a8` as an example.
 
