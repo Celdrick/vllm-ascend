@@ -99,7 +99,6 @@ from vllm_ascend.utils import (
     enable_sp,
     register_ascend_customop,
     setup_ascend_local_comm_res,
-    vllm_version_is,
 )
 from vllm_ascend.worker.model_runner_v1 import NPUModelRunner
 
@@ -288,10 +287,6 @@ class NPUWorker(WorkerBase):
                 if name in self._sleep_saved_buffers:
                     buffer.data.copy_(self._sleep_saved_buffers[name].data)
             self._sleep_saved_buffers = {}
-
-        # vLLM main removed the post-KV-cache wake hook; keep it on v0.28.0.
-        if (tags is None or "kv_cache" in tags) and vllm_version_is("0.28.0"):
-            self.model_runner.post_kv_cache_wake_up()
 
         rl_config = get_ascend_config().rl_config
         cleanup_enabled = rl_config.enabled and rl_config.sleep_mode_extra_cleanup
@@ -664,11 +659,6 @@ class NPUWorker(WorkerBase):
         derives a num_blocks (and block pool) small enough for the per-layer
         buffers to fit.
         """
-        # v0.28.0 keeps shared_by aliasing (one alloc per descriptor); the
-        # #51718 multi-group scale is main-only. Also avoids
-        # CacheConfig.get_resolved_kv_cache_layout which does not exist on release.
-        if vllm_version_is("0.28.0"):
-            return available_memory
         kv_cache_spec = self.get_kv_cache_spec()
         if not isinstance(kv_cache_spec, dict):
             return available_memory
@@ -684,7 +674,7 @@ class NPUWorker(WorkerBase):
             specs = (
                 group_spec.kv_cache_specs.values() if isinstance(group_spec, UniformTypeKVCacheSpecs) else (group_spec,)
             )
-            if any(getattr(spec, "model_version", None) == "deepseek_v4" for spec in specs):
+            if any(getattr(spec, "model_version", None) in {"deepseek_v4", "deepseek_v41"} for spec in specs):
                 return available_memory
 
         # vLLM #51718 overlays KV cache groups in one standardized backing
@@ -1215,7 +1205,7 @@ class NPUWorker(WorkerBase):
     def execute_dummy_batch(self) -> None:
         self.log_memory_stats()
         num_tokens = getattr(self.model_runner, "uniform_decode_query_len", 1)
-        self.model_runner._dummy_run(num_tokens, uniform_decode=True)
+        self.model_runner._dummy_run(num_tokens, uniform_decode=True, skip_gdn_state_update=True)
 
     def _init_worker_distributed_environment(self) -> None:
         """Initialize the distributed environment."""
