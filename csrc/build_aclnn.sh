@@ -134,6 +134,7 @@ elif [[ "$SOC_VERSION" =~ ^ascend910b ]]; then
         "mla_preprocess"
         "fused_sparse_attention_overlap"
         "fused_lightning_indexer_manage"
+        "fused_quant_lightning_indexer_manage"
         "fused_scatter_copy_sparse_flash_attention"
     )
 
@@ -176,6 +177,7 @@ elif [[ "$SOC_VERSION" =~ ^ascend910_93 ]]; then
         "dequant_swiglu_quant"
         "grouped_matmul_swiglu_quant"
         "grouped_matmul_swiglu_quant_v2"
+        "attn_res_fwd"
         "chunk_fwd_o_vllm"
         "kda_gate_cumsum"
         "kda_layout_swap12"
@@ -187,6 +189,7 @@ elif [[ "$SOC_VERSION" =~ ^ascend910_93 ]]; then
         "mla_preprocess"
         "fused_sparse_attention_overlap"
         "fused_lightning_indexer_manage"
+        "fused_quant_lightning_indexer_manage"
         "fused_scatter_copy_sparse_flash_attention"
     )
     CUSTOM_OPS=$(IFS=';'; echo "${CUSTOM_OPS_ARRAY[*]}")
@@ -216,6 +219,7 @@ elif [[ "$SOC_VERSION" =~ ^ascend950 ]]; then
         "situ_mx_quant"
         "grouped_matmul_situ_quant"
         "indexer_compress_epilog_v2"
+        "attn_res_fwd"
         "chunk_fwd_o_vllm"
         "kda_gate_cumsum"
         "kda_layout_swap12"
@@ -223,7 +227,6 @@ elif [[ "$SOC_VERSION" =~ ^ascend950 ]]; then
         "store_kv_block_metadata"
         "k2q_csr"
         "sparse_attention_score"
-        "mla_prolog_v3_k3"
         "msa_index_score"
     )
 
